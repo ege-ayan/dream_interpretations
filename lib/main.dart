@@ -1,8 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'firebase_options.dart';
-import 'screens/home_screen.dart';
-import 'screens/login_screen.dart';
+import 'config/firebase_options.dart';
+import 'screens/home/home_view.dart';
+import 'screens/login/login_view.dart';
 import 'services/auth_service.dart';
 
 void main() async {
@@ -29,9 +29,9 @@ class MyApp extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.active) {
             if (snapshot.hasData) {
-              return const HomeScreen();
+              return const HomeView();
             } else {
-              return const LoginScreen();
+              return const LoginView();
             }
           }
           return const Scaffold(
