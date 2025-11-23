@@ -23,29 +23,77 @@ class _RegisterViewState extends State<RegisterView> {
       listenable: _controller,
       builder: (context, child) {
         return Scaffold(
-          appBar: AppBar(title: const Text('Kayıt Ol')),
-          body: Padding(
-            padding: const EdgeInsets.all(16.0),
+          body: SafeArea(
             child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
               child: Form(
                 key: _controller.formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    const SizedBox(height: 20),
+                    // Back button
+                    Align(
+                      alignment: Alignment.topLeft,
+                      child: IconButton(
+                        icon: const Icon(Icons.arrow_back),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    // Title
+                    Text(
+                      'Hesap Oluştur',
+                      style: Theme.of(context).textTheme.headlineLarge
+                          ?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Rüya yolculuğunuza başlayın',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 32),
+                    // Error message
                     if (_controller.errorMessage != null)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 16.0),
-                        child: Text(
-                          _controller.errorMessage!,
-                          style: const TextStyle(color: Colors.red),
-                          textAlign: TextAlign.center,
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.red.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.error_outline, color: Colors.red),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                _controller.errorMessage!,
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+                    // Name field
                     TextFormField(
                       controller: _controller.nameController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Ad',
-                        border: OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.person_outline),
+                        prefixIconColor: Theme.of(context).colorScheme.primary,
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -55,11 +103,13 @@ class _RegisterViewState extends State<RegisterView> {
                       },
                     ),
                     const SizedBox(height: 16),
+                    // Surname field
                     TextFormField(
                       controller: _controller.surnameController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Soyad',
-                        border: OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.person_outline),
+                        prefixIconColor: Theme.of(context).colorScheme.primary,
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -69,11 +119,13 @@ class _RegisterViewState extends State<RegisterView> {
                       },
                     ),
                     const SizedBox(height: 16),
+                    // Email field
                     TextFormField(
                       controller: _controller.emailController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'E-posta',
-                        border: OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.email_outlined),
+                        prefixIconColor: Theme.of(context).colorScheme.primary,
                       ),
                       keyboardType: TextInputType.emailAddress,
                       validator: (value) {
@@ -87,21 +139,25 @@ class _RegisterViewState extends State<RegisterView> {
                       },
                     ),
                     const SizedBox(height: 16),
+                    // Password field
                     TextFormField(
                       controller: _controller.passwordController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Şifre',
-                        border: OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        prefixIconColor: Theme.of(context).colorScheme.primary,
                       ),
                       obscureText: true,
                       validator: _controller.validatePassword,
                     ),
                     const SizedBox(height: 16),
+                    // Confirm password field
                     TextFormField(
                       controller: _controller.confirmPasswordController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Şifre Tekrar',
-                        border: OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        prefixIconColor: Theme.of(context).colorScheme.primary,
                       ),
                       obscureText: true,
                       validator: (value) {
@@ -114,15 +170,33 @@ class _RegisterViewState extends State<RegisterView> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 32),
+                    // Register button
                     ElevatedButton(
                       onPressed: _controller.isLoading
                           ? null
                           : () => _controller.register(context),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 56),
+                      ),
                       child: _controller.isLoading
-                          ? const CircularProgressIndicator()
-                          : const Text('Kayıt Ol'),
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text(
+                              'Kayıt Ol',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     ),
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),

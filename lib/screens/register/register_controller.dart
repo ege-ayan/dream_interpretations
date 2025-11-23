@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/auth_service.dart';
 
 class RegisterController extends ChangeNotifier {
@@ -24,6 +25,26 @@ class RegisterController extends ChangeNotifier {
     super.dispose();
   }
 
+  String _getErrorMessage(dynamic error) {
+    if (error is FirebaseAuthException) {
+      switch (error.code) {
+        case 'email-already-in-use':
+          return 'Bu e-posta adresi zaten kullanılıyor. Giriş yapmayı deneyin.';
+        case 'invalid-email':
+          return 'Geçersiz e-posta adresi.';
+        case 'operation-not-allowed':
+          return 'E-posta/şifre ile kayıt şu anda devre dışı.';
+        case 'weak-password':
+          return 'Şifreniz çok zayıf. Daha güçlü bir şifre seçin.';
+        case 'network-request-failed':
+          return 'İnternet bağlantınızı kontrol edin.';
+        default:
+          return 'Kayıt sırasında bir hata oluştu. Lütfen tekrar deneyin.';
+      }
+    }
+    return 'Bir hata oluştu. Lütfen tekrar deneyin.';
+  }
+
   Future<void> register(BuildContext context) async {
     if (formKey.currentState!.validate()) {
       isLoading = true;
@@ -41,7 +62,7 @@ class RegisterController extends ChangeNotifier {
           Navigator.pop(context);
         }
       } catch (e) {
-        errorMessage = "Kayıt başarısız: ${e.toString()}";
+        errorMessage = _getErrorMessage(e);
       } finally {
         isLoading = false;
         notifyListeners();

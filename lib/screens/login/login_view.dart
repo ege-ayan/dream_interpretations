@@ -24,76 +24,184 @@ class _LoginViewState extends State<LoginView> {
       listenable: _controller,
       builder: (context, child) {
         return Scaffold(
-          appBar: AppBar(title: const Text('Giriş Yap')),
-          body: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Form(
-              key: _controller.formKey,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (_controller.errorMessage != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
-                      child: Text(
-                        _controller.errorMessage!,
-                        style: const TextStyle(color: Colors.red),
-                        textAlign: TextAlign.center,
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Form(
+                key: _controller.formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: 40),
+                    // Dream icon
+                    Center(
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [
+                              Theme.of(context).colorScheme.primary,
+                              Theme.of(context).colorScheme.secondary,
+                            ],
+                          ),
+                        ),
+                        child: CircleAvatar(
+                          radius: 60,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.surface,
+                          child: Icon(
+                            Icons.nightlight_rounded,
+                            size: 60,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
                       ),
                     ),
-                  TextFormField(
-                    controller: _controller.emailController,
-                    decoration: const InputDecoration(
-                      labelText: 'E-posta',
-                      border: OutlineInputBorder(),
+                    const SizedBox(height: 32),
+                    // Title
+                    Text(
+                      'Rüya Tabirleri',
+                      style: Theme.of(context).textTheme.headlineLarge
+                          ?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                      textAlign: TextAlign.center,
                     ),
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Lütfen e-posta adresinizi girin';
-                      }
-                      if (!value.contains('@')) {
-                        return 'Geçerli bir e-posta adresi girin';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _controller.passwordController,
-                    decoration: const InputDecoration(
-                      labelText: 'Şifre',
-                      border: OutlineInputBorder(),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Rüyalarınızın anlamını keşfedin',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    obscureText: true,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Lütfen şifrenizi girin';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: _controller.isLoading ? null : _controller.login,
-                    child: _controller.isLoading
-                        ? const CircularProgressIndicator()
-                        : const Text('Giriş Yap'),
-                  ),
-                  const SizedBox(height: 16),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const RegisterView(),
+                    const SizedBox(height: 48),
+                    // Error message
+                    if (_controller.errorMessage != null)
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.red.withValues(alpha: 0.3),
+                          ),
                         ),
-                      );
-                    },
-                    child: const Text('Hesabınız yok mu? Kayıt Olun'),
-                  ),
-                ],
+                        child: Row(
+                          children: [
+                            const Icon(Icons.error_outline, color: Colors.red),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                _controller.errorMessage!,
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    // Email field
+                    TextFormField(
+                      controller: _controller.emailController,
+                      decoration: InputDecoration(
+                        labelText: 'E-posta',
+                        prefixIcon: const Icon(Icons.email_outlined),
+                        prefixIconColor: Theme.of(context).colorScheme.primary,
+                      ),
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Lütfen e-posta adresinizi girin';
+                        }
+                        if (!value.contains('@')) {
+                          return 'Geçerli bir e-posta adresi girin';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    // Password field
+                    TextFormField(
+                      controller: _controller.passwordController,
+                      decoration: InputDecoration(
+                        labelText: 'Şifre',
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        prefixIconColor: Theme.of(context).colorScheme.primary,
+                      ),
+                      obscureText: true,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Lütfen şifrenizi girin';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 32),
+                    // Login button
+                    ElevatedButton(
+                      onPressed: _controller.isLoading
+                          ? null
+                          : _controller.login,
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 56),
+                      ),
+                      child: _controller.isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text(
+                              'Giriş Yap',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                    ),
+                    const SizedBox(height: 24),
+                    // Register link
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Hesabınız yok mu? ',
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withValues(alpha: 0.7),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const RegisterView(),
+                              ),
+                            );
+                          },
+                          child: Text(
+                            'Kayıt Olun',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
