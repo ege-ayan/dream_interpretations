@@ -1,19 +1,10 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class DreamService {
-  String get _baseUrl {
-    if (kIsWeb) {
-      return 'http://localhost:3000/interpret';
-    } else if (Platform.isAndroid) {
-      return 'http://10.0.2.2:3000/interpret';
-    } else {
-      return 'http://localhost:3000/interpret';
-    }
-  }
+  final String _baseUrl =
+      'https://dream-interpretations-backend.vercel.app/api/dreams/interpret';
 
   Future<String> interpretDream(String dream) async {
     try {
@@ -32,7 +23,7 @@ class DreamService {
         body: jsonEncode({'dream': dream}),
       );
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 201 || response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return data['interpretation'] ?? 'Yorum bulunamadı.';
       } else {

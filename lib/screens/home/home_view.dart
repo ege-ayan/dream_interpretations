@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-import 'home_controller.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../models/dream_model.dart';
+import '../../services/dream_service.dart';
+import '../../services/firestore_service.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -9,267 +13,299 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  final HomeController _controller = HomeController();
+  final TextEditingController _dreamInputController = TextEditingController();
+  final DreamService _dreamService = DreamService();
+  final FirestoreService _firestoreService = FirestoreService();
+
+  bool _isLoading = false;
+  String? _interpretationResult;
+  String? _errorMessage;
 
   @override
   void dispose() {
-    _controller.dispose();
+    _dreamInputController.dispose();
     super.dispose();
+  }
+
+  Future<void> _interpretDream() async {
+    final dreamText = _dreamInputController.text.trim();
+    if (dreamText.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Lütfen rüyanızı yazın.')));
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+      _interpretationResult = null;
+    });
+
+    try {
+      final interpretation = await _dreamService.interpretDream(dreamText);
+
+      // Save to Firestore
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      if (userId != null) {
+        final dreamModel = DreamModel(
+          id: '', // Will be generated
+          userId: userId,
+          dreamText: dreamText,
+          interpretation: interpretation,
+          timestamp: DateTime.now(),
+          messages: [], // Not using chat messages anymore for this simple flow
+        );
+        await _firestoreService.saveDream(dreamModel);
+      }
+
+      if (mounted) {
+        setState(() {
+          _interpretationResult = interpretation;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Bir hata oluştu: $e';
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _reset() {
+    setState(() {
+      _interpretationResult = null;
+      _errorMessage = null;
+      _dreamInputController.clear();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: _controller,
-      builder: (context, child) {
-        return Scaffold(
-          body: SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Header with drawer button
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.menu),
-                        onPressed: () {
-                          Scaffold.of(context).openDrawer();
-                        },
-                      ),
-                      const Spacer(),
-                      Icon(
-                        Icons.nightlight_rounded,
-                        color: Theme.of(context).colorScheme.primary,
-                        size: 28,
-                      ),
-                    ],
-                  ),
+    return Scaffold(
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Custom Header
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8.0,
                 ),
-                // Content
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Welcome text
-                        Text(
-                          'Rüyalarınızı Keşfedin',
-                          style: Theme.of(context).textTheme.headlineMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Yapay zeka destekli yorumlarla rüyalarınızın anlamını çözün',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withValues(alpha: 0.7),
-                              ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 32),
-                        // Dream input card
-                        Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                Theme.of(context).colorScheme.surface,
-                                Theme.of(
-                                  context,
-                                ).colorScheme.surface.withValues(alpha: 0.8),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.primary.withValues(alpha: 0.3),
-                            ),
+                child: Row(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.auto_awesome,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.primary,
-                                    size: 24,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Rüyanızı Anlatın',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleLarge
-                                        ?.copyWith(fontWeight: FontWeight.bold),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 16),
-                              TextField(
-                                controller: _controller.dreamController,
-                                maxLines: 6,
-                                style: const TextStyle(fontSize: 16),
-                                decoration: InputDecoration(
-                                  hintText:
-                                      'Rüyanızı detaylı bir şekilde buraya yazın...\n\nÖrneğin: Gökyüzünde uçuyordum, altımda deniz vardı...',
-                                  hintStyle: TextStyle(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurface
-                                        .withValues(alpha: 0.5),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                              SizedBox(
-                                width: double.infinity,
-                                child: ElevatedButton.icon(
-                                  onPressed: _controller.isLoading
-                                      ? null
-                                      : () =>
-                                            _controller.interpretDream(context),
-                                  icon: _controller.isLoading
-                                      ? const SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Colors.white,
-                                          ),
-                                        )
-                                      : const Icon(Icons.psychology),
-                                  label: Text(
-                                    _controller.isLoading
-                                        ? 'Yorumlanıyor...'
-                                        : 'Yorumla',
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  style: ElevatedButton.styleFrom(
-                                    minimumSize: const Size(
-                                      double.infinity,
-                                      56,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        // Error message
-                        if (_controller.errorMessage != null)
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.red.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Colors.red.withValues(alpha: 0.3),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.error_outline,
-                                  color: Colors.red,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    _controller.errorMessage!,
-                                    style: const TextStyle(color: Colors.red),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        // Interpretation result
-                        if (_controller.interpretation != null)
-                          Container(
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  Theme.of(
-                                    context,
-                                  ).colorScheme.primary.withValues(alpha: 0.15),
-                                  Theme.of(context).colorScheme.secondary
-                                      .withValues(alpha: 0.15),
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.primary.withValues(alpha: 0.3),
-                              ),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.stars,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
-                                      size: 24,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Rüya Yorumu',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleLarge
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                            color: Theme.of(
-                                              context,
-                                            ).colorScheme.primary,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  _controller.interpretation!,
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.bodyLarge?.copyWith(height: 1.6),
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
+                        ],
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.menu),
+                        onPressed: () => Scaffold.of(context).openDrawer(),
+                        tooltip: 'Menü',
+                      ),
                     ),
+                    Expanded(
+                      child: Text(
+                        'Rüya Yorumlat',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 48), // Balance the left icon
+                  ],
+                ),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24.0),
+                  child: _buildContent(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContent() {
+    if (_isLoading) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(height: 100),
+            CircularProgressIndicator(
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Rüyanız yorumlanıyor...',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Yıldızlar inceleniyor...',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_interpretationResult != null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.3),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.auto_awesome,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 28,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Yorumunuz',
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                MarkdownBody(
+                  data: _interpretationResult!,
+                  styleSheet: MarkdownStyleSheet(
+                    p: Theme.of(
+                      context,
+                    ).textTheme.bodyLarge?.copyWith(height: 1.6),
                   ),
                 ),
               ],
             ),
           ),
-        );
-      },
+          const SizedBox(height: 32),
+          ElevatedButton.icon(
+            onPressed: _reset,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Yeni Rüya Yorumlat'),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Rüyanızı Anlatın',
+          style: Theme.of(
+            context,
+          ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 16),
+        Text(
+          'Detaylı bir şekilde rüyanızı yazın, yapay zeka sizin için yorumlasın.',
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.7),
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 32),
+        TextField(
+          controller: _dreamInputController,
+          maxLines: 8,
+          decoration: InputDecoration(
+            hintText:
+                'Örneğin: Ormanda yürüyordum, hava çok karanlıktı ve birden önüme parlak bir ışık çıktı...',
+            filled: true,
+            fillColor: Theme.of(context).colorScheme.surface,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.3),
+              ),
+            ),
+          ),
+        ),
+        if (_errorMessage != null) ...[
+          const SizedBox(height: 16),
+          Text(
+            _errorMessage!,
+            style: const TextStyle(color: Colors.red),
+            textAlign: TextAlign.center,
+          ),
+        ],
+        const SizedBox(height: 32),
+        ElevatedButton.icon(
+          onPressed: _interpretDream,
+          icon: const Icon(Icons.psychology),
+          label: const Text('Yorumla'),
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            textStyle: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

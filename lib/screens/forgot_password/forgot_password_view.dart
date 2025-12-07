@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
-import 'login_controller.dart';
-import '../register/register_view.dart';
-import '../forgot_password/forgot_password_view.dart';
+import 'forgot_password_controller.dart';
 
-class LoginView extends StatefulWidget {
-  const LoginView({super.key});
+class ForgotPasswordView extends StatefulWidget {
+  const ForgotPasswordView({super.key});
 
   @override
-  State<LoginView> createState() => _LoginViewState();
+  State<ForgotPasswordView> createState() => _ForgotPasswordViewState();
 }
 
-class _LoginViewState extends State<LoginView> {
-  final LoginController _controller = LoginController();
+class _ForgotPasswordViewState extends State<ForgotPasswordView> {
+  final ForgotPasswordController _controller = ForgotPasswordController();
 
   @override
   void dispose() {
@@ -25,6 +23,7 @@ class _LoginViewState extends State<LoginView> {
       listenable: _controller,
       builder: (context, child) {
         return Scaffold(
+          appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
           body: SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
@@ -33,8 +32,8 @@ class _LoginViewState extends State<LoginView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const SizedBox(height: 40),
-                    // Dream icon
+                    const SizedBox(height: 20),
+                    // Icon
                     Center(
                       child: Container(
                         padding: const EdgeInsets.all(4),
@@ -53,7 +52,7 @@ class _LoginViewState extends State<LoginView> {
                             context,
                           ).colorScheme.surface,
                           child: Icon(
-                            Icons.nightlight_rounded,
+                            Icons.lock_reset,
                             size: 60,
                             color: Theme.of(context).colorScheme.primary,
                           ),
@@ -63,7 +62,7 @@ class _LoginViewState extends State<LoginView> {
                     const SizedBox(height: 32),
                     // Title
                     Text(
-                      'Rüya Tabirleri',
+                      'Şifremi Unuttum',
                       style: Theme.of(context).textTheme.headlineLarge
                           ?.copyWith(
                             fontWeight: FontWeight.bold,
@@ -73,7 +72,7 @@ class _LoginViewState extends State<LoginView> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Rüyalarınızın anlamını keşfedin',
+                      'E-posta adresinizi girin, size şifre sıfırlama bağlantısı gönderelim',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: Theme.of(
                           context,
@@ -82,6 +81,31 @@ class _LoginViewState extends State<LoginView> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 48),
+                    // Success message
+                    if (_controller.successMessage != null)
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.green.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.check_circle, color: Colors.green),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                _controller.successMessage!,
+                                style: const TextStyle(color: Colors.green),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     // Error message
                     if (_controller.errorMessage != null)
                       Container(
@@ -126,50 +150,12 @@ class _LoginViewState extends State<LoginView> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 16),
-                    // Password field
-                    TextFormField(
-                      controller: _controller.passwordController,
-                      decoration: InputDecoration(
-                        labelText: 'Şifre',
-                        prefixIcon: const Icon(Icons.lock_outline),
-                        prefixIconColor: Theme.of(context).colorScheme.primary,
-                      ),
-                      obscureText: true,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Lütfen şifrenizi girin';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    // Forgot password link
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const ForgotPasswordView(),
-                            ),
-                          );
-                        },
-                        child: Text(
-                          'Şifremi Unuttum?',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    // Login button
+                    const SizedBox(height: 32),
+                    // Send button
                     ElevatedButton(
                       onPressed: _controller.isLoading
                           ? null
-                          : _controller.login,
+                          : _controller.sendResetEmail,
                       style: ElevatedButton.styleFrom(
                         minimumSize: const Size(double.infinity, 56),
                       ),
@@ -183,7 +169,7 @@ class _LoginViewState extends State<LoginView> {
                               ),
                             )
                           : const Text(
-                              'Giriş Yap',
+                              'Gönder',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -191,36 +177,18 @@ class _LoginViewState extends State<LoginView> {
                             ),
                     ),
                     const SizedBox(height: 24),
-                    // Register link
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Hesabınız yok mu? ',
-                          style: TextStyle(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withValues(alpha: 0.7),
-                          ),
+                    // Back to login
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text(
+                        'Giriş sayfasına dön',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.bold,
                         ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const RegisterView(),
-                              ),
-                            );
-                          },
-                          child: Text(
-                            'Kayıt Olun',
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ],
                 ),

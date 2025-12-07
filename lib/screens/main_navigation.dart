@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'home/home_view.dart';
 import 'subscription/subscription_view.dart';
+import 'past_interpretations/past_interpretations_view.dart';
+import 'profile/profile_view.dart';
 import '../services/auth_service.dart';
 
 class MainNavigation extends StatefulWidget {
@@ -17,7 +19,7 @@ class _MainNavigationState extends State<MainNavigation> {
 
   final List<Widget> _screens = [
     const HomeView(),
-    const HomeView(), // Rüya Yorumlat (same as home for now)
+    const PastInterpretationsView(),
     const SubscriptionView(),
   ];
 
@@ -42,7 +44,7 @@ class _MainNavigationState extends State<MainNavigation> {
             child: Column(
               children: [
                 const SizedBox(height: 24),
-                // User avatar with mystical glow
+                // User avatar
                 Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
@@ -73,12 +75,33 @@ class _MainNavigationState extends State<MainNavigation> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Rüya Yorumcusu',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                const SizedBox(height: 24),
+                Divider(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.1),
+                ),
+                // Profile menu item
+                ListTile(
+                  leading: Icon(
+                    Icons.person_outline,
                     color: Theme.of(context).colorScheme.primary,
                   ),
+                  title: const Text('Profilim'),
+                  onTap: () {
+                    Navigator.pop(context); // Close drawer
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProfileView(),
+                      ),
+                    );
+                  },
+                ),
+                Divider(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.1),
                 ),
                 const Spacer(),
                 // Logout button
@@ -127,16 +150,13 @@ class _MainNavigationState extends State<MainNavigation> {
           },
           items: const [
             BottomNavigationBarItem(
-              icon: Icon(Icons.home_rounded),
-              label: 'Ana Sayfa',
-            ),
-            BottomNavigationBarItem(
               icon: Icon(Icons.nightlight_rounded),
               label: 'Rüya Yorumlat',
             ),
+            BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Geçmiş'),
             BottomNavigationBarItem(
               icon: Icon(Icons.workspace_premium),
-              label: 'Abonelik',
+              label: 'Paketler',
             ),
           ],
         ),

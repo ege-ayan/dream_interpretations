@@ -1,13 +1,26 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'config/firebase_options.dart';
 import 'screens/main_navigation.dart';
 import 'screens/login/login_view.dart';
 import 'services/auth_service.dart';
+import 'services/revenue_cat_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  FirebaseAuth.instance.authStateChanges().listen((user) async {
+    if (user != null) {
+      try {
+        await RevenueCatService().initialize(user.uid);
+      } catch (e) {
+        debugPrint('RevenueCat initialization error: $e');
+      }
+    }
+  });
+
   runApp(const MyApp());
 }
 
@@ -25,10 +38,10 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         brightness: Brightness.dark,
         colorScheme: ColorScheme.dark(
-          primary: const Color(0xFF9C27B0), // Deep purple
-          secondary: const Color(0xFF7B1FA2), // Purple
-          tertiary: const Color(0xFF4A148C), // Dark purple
-          surface: const Color(0xFF1A1A2E), // Deep dark blue
+          primary: const Color(0xFF9C27B0),
+          secondary: const Color(0xFF7B1FA2),
+          tertiary: const Color(0xFF4A148C),
+          surface: const Color(0xFF1A1A2E),
           onPrimary: Colors.white,
           onSecondary: Colors.white,
           onSurface: const Color(0xFFE0E0E0),
