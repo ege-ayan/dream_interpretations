@@ -3,6 +3,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../models/dream_model.dart';
 import '../../services/dream_service.dart';
+import 'widgets/loading_view.dart';
 import '../../services/firestore_service.dart';
 
 class HomeView extends StatefulWidget {
@@ -14,6 +15,7 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> {
   final TextEditingController _dreamInputController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
   final DreamService _dreamService = DreamService();
   final FirestoreService _firestoreService = FirestoreService();
 
@@ -22,8 +24,17 @@ class _HomeViewState extends State<HomeView> {
   String? _errorMessage;
 
   @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(() {
+      setState(() {});
+    });
+  }
+
+  @override
   void dispose() {
     _dreamInputController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -103,23 +114,10 @@ class _HomeViewState extends State<HomeView> {
                 ),
                 child: Row(
                   children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: IconButton(
-                        icon: const Icon(Icons.menu),
-                        onPressed: () => Scaffold.of(context).openDrawer(),
-                        tooltip: 'Menü',
-                      ),
+                    IconButton(
+                      icon: const Icon(Icons.menu),
+                      onPressed: () => Scaffold.of(context).openDrawer(),
+                      tooltip: 'Menü',
                     ),
                     Expanded(
                       child: Text(
@@ -135,10 +133,12 @@ class _HomeViewState extends State<HomeView> {
                 ),
               ),
               Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24.0),
-                  child: _buildContent(),
-                ),
+                child: _isLoading
+                    ? const DreamAnalysisLoadingView()
+                    : SingleChildScrollView(
+                        padding: const EdgeInsets.all(24.0),
+                        child: _buildContent(),
+                      ),
               ),
             ],
           ),
@@ -148,36 +148,6 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Widget _buildContent() {
-    if (_isLoading) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const SizedBox(height: 100),
-            CircularProgressIndicator(
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Rüyanız yorumlanıyor...',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Yıldızlar inceleniyor...',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withValues(alpha: 0.6),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
     if (_interpretationResult != null) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -234,6 +204,7 @@ class _HomeViewState extends State<HomeView> {
           ),
           const SizedBox(height: 32),
           ElevatedButton.icon(
+            key: const ValueKey('reset_button'),
             onPressed: _reset,
             icon: const Icon(Icons.refresh),
             label: const Text('Yeni Rüya Yorumlat'),
@@ -268,10 +239,17 @@ class _HomeViewState extends State<HomeView> {
         const SizedBox(height: 32),
         TextField(
           controller: _dreamInputController,
+          focusNode: _focusNode,
           maxLines: 8,
           decoration: InputDecoration(
-            hintText:
-                'Örneğin: Ormanda yürüyordum, hava çok karanlıktı ve birden önüme parlak bir ışık çıktı...',
+            hintText: _focusNode.hasFocus
+                ? ''
+                : 'Örneğin: Ormanda yürüyordum, hava çok karanlıktı ve birden önüme parlak bir ışık çıktı...',
+            hintStyle: TextStyle(
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.2),
+            ),
             filled: true,
             fillColor: Theme.of(context).colorScheme.surface,
             border: OutlineInputBorder(
@@ -294,6 +272,7 @@ class _HomeViewState extends State<HomeView> {
         ],
         const SizedBox(height: 32),
         ElevatedButton.icon(
+          key: const ValueKey('interpret_button'),
           onPressed: _interpretDream,
           icon: const Icon(Icons.psychology),
           label: const Text('Yorumla'),

@@ -1,0 +1,18 @@
+PLACE YOUR APP ICON HERE
+
+File name: app_icon.png
+Required size: 1024x1024 pixels
+Format: PNG with transparent background
+
+Replace this file with your actual app_icon.png file.
+
+For a dream interpretation app, consider these design ideas:
+- Moon and stars 🌙✨
+- Dream cloud 💭
+- Magical crystal ball 🔮
+- Sleeping figure with dream symbols 💤
+- Mystical symbols and patterns
+
+After placing your icon, run:
+flutter pub get
+flutter pub run flutter_launcher_icons

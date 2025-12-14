@@ -1,25 +1,13 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'config/firebase_options.dart';
 import 'screens/main_navigation.dart';
 import 'screens/login/login_view.dart';
 import 'services/auth_service.dart';
-import 'services/revenue_cat_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-  FirebaseAuth.instance.authStateChanges().listen((user) async {
-    if (user != null) {
-      try {
-        await RevenueCatService().initialize(user.uid);
-      } catch (e) {
-        debugPrint('RevenueCat initialization error: $e');
-      }
-    }
-  });
 
   runApp(const MyApp());
 }

@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'home/home_view.dart';
-import 'subscription/subscription_view.dart';
 import 'past_interpretations/past_interpretations_view.dart';
 import 'profile/profile_view.dart';
-import '../services/auth_service.dart';
+import 'subscription/subscription_view.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -15,7 +13,6 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
-  final AuthService _auth = AuthService();
 
   final List<Widget> _screens = [
     const HomeView(),
@@ -25,18 +22,17 @@ class _MainNavigationState extends State<MainNavigation> {
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-
     return Scaffold(
       drawer: Drawer(
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
               colors: [
                 Theme.of(context).colorScheme.surface,
-                Theme.of(context).colorScheme.surface,
+                Theme.of(context).colorScheme.surface.withValues(alpha: 0.95),
+                Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
               ],
             ),
           ),
@@ -44,36 +40,55 @@ class _MainNavigationState extends State<MainNavigation> {
             child: Column(
               children: [
                 const SizedBox(height: 24),
-                // User avatar
+                // User avatar with enhanced styling
                 Container(
-                  padding: const EdgeInsets.all(4),
+                  padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                       colors: [
-                        Theme.of(context).colorScheme.primary,
-                        Theme.of(context).colorScheme.secondary,
+                        Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.8),
+                        Theme.of(
+                          context,
+                        ).colorScheme.secondary.withValues(alpha: 0.8),
+                        Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.6),
                       ],
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: CircleAvatar(
-                    radius: 50,
+                    radius: 45,
                     backgroundColor: Theme.of(context).colorScheme.surface,
                     child: Icon(
-                      Icons.person,
-                      size: 50,
+                      Icons.nightlight_rounded,
+                      size: 45,
                       color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
-                // User email
+                // App title
                 Text(
-                  user?.email ?? 'Kullanıcı',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  'Rüya Tabirleri',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurface,
                     fontWeight: FontWeight.bold,
                   ),
+                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
                 Divider(
@@ -104,31 +119,12 @@ class _MainNavigationState extends State<MainNavigation> {
                   ).colorScheme.onSurface.withValues(alpha: 0.1),
                 ),
                 const Spacer(),
-                // Logout button
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () async {
-                        await _auth.signOut();
-                      },
-                      icon: const Icon(Icons.logout),
-                      label: const Text('Çıkış Yap'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.tertiary,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
               ],
             ),
           ),
         ),
       ),
-      body: _screens[_currentIndex],
+      body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           boxShadow: [
@@ -155,8 +151,8 @@ class _MainNavigationState extends State<MainNavigation> {
             ),
             BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Geçmiş'),
             BottomNavigationBarItem(
-              icon: Icon(Icons.workspace_premium),
-              label: 'Paketler',
+              icon: Icon(Icons.star_rounded),
+              label: 'Premium',
             ),
           ],
         ),

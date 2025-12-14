@@ -3,6 +3,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../models/dream_model.dart';
 import '../../services/firestore_service.dart';
 import '../../utils/turkish_date_formatter.dart';
+import '../../utils/custom_feedback.dart';
 
 class InterpretationDetailView extends StatelessWidget {
   final DreamModel dream;
@@ -62,7 +63,7 @@ class InterpretationDetailView extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 48),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -161,44 +162,39 @@ class InterpretationDetailView extends StatelessWidget {
     );
   }
 
-  void _showDeleteDialog(BuildContext context) {
-    showDialog(
+  void _showDeleteDialog(BuildContext context) async {
+    final confirmed = await CustomFeedback.showCustomConfirmationDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Rüyayı Sil'),
-        content: const Text(
-          'Bu rüyayı ve yorumunu silmek istediğinizden emin misiniz?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('İptal'),
-          ),
-          TextButton(
-            onPressed: () async {
-              try {
-                await FirestoreService().deleteDream(dream.id);
-                if (context.mounted) {
-                  Navigator.pop(context); // Close dialog
-                  Navigator.pop(context); // Go back to list
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(const SnackBar(content: Text('Rüya silindi')));
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text('Hata: $e')));
-                }
-              }
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Sil'),
-          ),
-        ],
-      ),
+      title: 'Rüyayı Sil',
+      message: 'Bu rüyayı ve yorumunu silmek istediğinizden emin misiniz?',
+      confirmText: 'Sil',
+      cancelText: 'İptal',
+      confirmColor: Colors.red,
+      icon: Icons.delete_outline_rounded,
     );
+
+    if (confirmed && context.mounted) {
+      try {
+        await FirestoreService().deleteDream(dream.id);
+        if (context.mounted) {
+          Navigator.pop(context); // Go back to list
+          CustomFeedback.showCustomSnackBar(
+            context: context,
+            message: 'Rüya başarıyla silindi',
+            icon: Icons.check_circle_rounded,
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          CustomFeedback.showCustomSnackBar(
+            context: context,
+            message: 'Hata: $e',
+            icon: Icons.error_outline_rounded,
+            backgroundColor: Colors.red,
+            iconColor: Colors.red,
+          );
+        }
+      }
+    }
   }
 }

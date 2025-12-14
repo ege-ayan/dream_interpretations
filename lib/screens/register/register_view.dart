@@ -23,6 +23,7 @@ class _RegisterViewState extends State<RegisterView> {
       listenable: _controller,
       builder: (context, child) {
         return Scaffold(
+          appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
           body: SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
@@ -31,15 +32,6 @@ class _RegisterViewState extends State<RegisterView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const SizedBox(height: 20),
-                    // Back button
-                    Align(
-                      alignment: Alignment.topLeft,
-                      child: IconButton(
-                        icon: const Icon(Icons.arrow_back),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ),
                     const SizedBox(height: 20),
                     // Title
                     Text(

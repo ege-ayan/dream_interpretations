@@ -164,7 +164,7 @@ class _LoginViewState extends State<LoginView> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 8),
                     // Login button
                     ElevatedButton(
                       onPressed: _controller.isLoading
@@ -196,7 +196,7 @@ class _LoginViewState extends State<LoginView> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Hesabınız yok mu? ',
+                          'Hesabınız yok mu?',
                           style: TextStyle(
                             color: Theme.of(
                               context,
@@ -212,6 +212,11 @@ class _LoginViewState extends State<LoginView> {
                               ),
                             );
                           },
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
                           child: Text(
                             'Kayıt Olun',
                             style: TextStyle(

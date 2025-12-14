@@ -52,9 +52,7 @@ class _ProfileViewState extends State<ProfileView> {
                           ),
                           child: CircleAvatar(
                             radius: 50,
-                            backgroundColor: Theme.of(
-                              context,
-                            ).colorScheme.surface,
+                            backgroundColor: Theme.of(context).colorScheme.surface,
                             child: Icon(
                               Icons.person,
                               size: 50,
@@ -66,11 +64,10 @@ class _ProfileViewState extends State<ProfileView> {
                         // Name
                         Text(
                           _controller.displayName,
-                          style: Theme.of(context).textTheme.headlineMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
                         ),
                       ],
                     ),
@@ -96,13 +93,22 @@ class _ProfileViewState extends State<ProfileView> {
                     ),
                   const SizedBox(height: 16),
                   // Dream count
-                  _buildInfoCard(
+                  _buildStatCard(
                     context,
                     icon: Icons.nightlight_rounded,
                     title: 'Toplam Rüya',
                     value: _controller.isLoading
                         ? '...'
                         : _controller.dreamCount.toString(),
+                  ),
+                  const SizedBox(height: 32),
+                  // Settings section
+                  Text(
+                    'Ayarlar',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   // Logout button
@@ -119,7 +125,9 @@ class _ProfileViewState extends State<ProfileView> {
                       ],
                     ),
                     child: ElevatedButton.icon(
-                      onPressed: () => _showLogoutConfirmation(context),
+                      onPressed: () async {
+                        await _controller.signOut();
+                      },
                       icon: const Icon(
                         Icons.logout_rounded,
                         color: Colors.white,
@@ -210,30 +218,52 @@ class _ProfileViewState extends State<ProfileView> {
     );
   }
 
-  void _showLogoutConfirmation(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Çıkış Yap'),
-        content: const Text(
-          'Hesabınızdan çıkış yapmak istediğinizden emin misiniz?',
+  Widget _buildStatCard(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String value,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+            Theme.of(context).colorScheme.secondary.withValues(alpha: 0.2),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('İptal'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context); // Close dialog
-              await _controller.signOut();
-              // Navigate back to trigger auth state change
-              if (context.mounted) {
-                Navigator.of(context).popUntil((route) => route.isFirst);
-              }
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Çıkış Yap'),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: Theme.of(context).colorScheme.primary, size: 40),
+          const SizedBox(width: 20),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.7),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+            ],
           ),
         ],
       ),
